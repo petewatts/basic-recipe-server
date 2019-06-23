@@ -1,5 +1,5 @@
 import argparse
-from flask import Flask
+from flask import Flask, abort, request
 from flask_restplus import Api, Resource, fields
 from werkzeug.middleware.proxy_fix import ProxyFix
 from recipes import RecipeDAO
@@ -8,7 +8,13 @@ from recipes import RecipeDAO
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app)
 api = Api(app, version="1.0", title="Recipe API", description="Gousto Recipe API")
-ns = api.namespace("recipes", description="Recipe operations")
+
+# API layout:
+#   GET /recipes/<id>       - Retrieve recipe
+#   GET /by-cuisine/<type>  - List of recipes by cuisine
+
+
+recipe_ns = api.namespace("recipes", description="Recipe operations")
 
 recipe = api.model(
     "Recipe",
@@ -47,22 +53,51 @@ DAO = RecipeDAO()
 DAO.import_file('recipe-data.csv')
 
 
-@app.route('/')
-def index():
-    return 'Gousto Recipe Server'
-
-
-@ns.route("/<int:id>")
-@ns.response(404, "Recipe not found")
-@ns.param("id", "The recipe identifier")
+@recipe_ns.route("/<int:id>")
+@recipe_ns.response(404, "Recipe not found")
+@recipe_ns.param("id", "The recipe identifier")
 class Recipe(Resource):
     """Show a single recipe item allow updating fields"""
 
-    @ns.doc("get_recipe")
-    @ns.marshal_with(recipe)
+    @recipe_ns.doc("get_recipe")
+    @recipe_ns.marshal_with(recipe)
     def get(self, id):
         """Fetch a given resource"""
         return DAO.get(id)
+
+
+@api.route('/by-cuisine/<cuisine>')
+@api.response(404, "Cuisine not found")
+class Cuisine(Resource):
+    """Show recipes by cuisine"""
+
+    def get(self, cuisine):
+
+        start = int(request.args.get('start', 1))
+        limit = int(request.args.get('limit', 10))
+
+        return get_paginated_list(cuisine, start, limit)
+
+
+def get_paginated_list(cuisine, start, limit):
+    recipes = DAO.by_cuisine(cuisine)
+    if not recipes:
+        return abort(404)
+
+    def build_recipe(recipe):
+        fields = ['id', 'title', 'marketing_description']
+        return {field: recipe[field] for field in fields}
+
+    count = len(recipes)
+    if count < start:
+        abort(404)
+    # make response
+    obj = {}
+    obj['start'] = start
+    obj['limit'] = limit
+    obj['count'] = count
+    obj['recipes'] = [build_recipe(recipe) for recipe in recipes[start - 1:start - 1 + limit]]
+    return obj
 
 
 if __name__ == "__main__":

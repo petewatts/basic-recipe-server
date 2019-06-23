@@ -1,5 +1,6 @@
 import csv
 import re
+from collections import defaultdict
 
 
 re_datetime = re.compile(r'^(\d\d)/(\d\d)/(\d{4}) (\d\d):(\d\d):(\d\d)$')
@@ -13,6 +14,7 @@ class RecipeDAO(object):
     def __init__(self):
         self.last_id = 0
         self.recipes = {}
+        self.cuisines = defaultdict(list)
 
     def import_file(self, data_file):
         with open(data_file) as f:
@@ -47,6 +49,15 @@ class RecipeDAO(object):
                 # Update the last id
                 if data["id"] > self.last_id:
                     self.last_id = data["id"]
+
+                # Add to cuisine index
+                if 'recipe_cuisine' in data:
+                    self.cuisines[data['recipe_cuisine']].append(data)
+
+    def by_cuisine(self, cuisine):
+        if cuisine not in self.cuisines:
+            return None
+        return self.cuisines[cuisine]
 
     def get(self, id):
         return self.recipes.get(id)

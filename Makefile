@@ -17,9 +17,12 @@ help:
 .PHONY: venv
 venv:
 	virtualenv --python=$(PYTHON_BIN) $(VIRTUALENV_DIR)
-	$(VIRTUALENV_DIR)/bin/pip install --upgrade pip
-	$(VIRTUALENV_DIR)/bin/pip install -r requirements.txt
 	@echo "Activate the new virtual environment with: source $(VIRTUALENV_DIR)"
+
+.PHONY: deps
+deps:
+	pip install --upgrade pip
+	pip install -r requirements.txt
  
 .PHONY: test
 test: test-unit test-feature

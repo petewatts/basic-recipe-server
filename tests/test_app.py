@@ -17,4 +17,4 @@ class TestApp(object):
         # Act
         response = client.get('/')
         # Assert
-        assert b'Hello, World!' in response.data
+        assert b'swagger' in response.data

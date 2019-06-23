@@ -25,7 +25,7 @@ deps:
 	pip install -r requirements.txt
  
 .PHONY: test
-test: test-unit test-feature
+test: test-unit test-features
 
 .PHONY: lint
 lint:

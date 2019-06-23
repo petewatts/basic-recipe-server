@@ -2,6 +2,7 @@ from behave import given, when, then
 from app import DAO
 from datetime import datetime
 from mock import patch, Mock
+import json
 
 
 @given('I am an API client')
@@ -83,3 +84,23 @@ def step_impl(context):
     data = context.response.get_json()
     for recipe in data['recipes']:
         assert list(recipe.keys()) == ['id', 'title', 'marketing_description']
+
+
+@when(u'I update one or more recipes fields')
+def step_impl(context):
+    data = {
+        'title': 'New recipe title',
+        'marketing_description': 'New description',
+    }
+    context.response = context.client.put('/recipes/1', data=json.dumps(data), content_type='application/json')
+
+
+@then(u'I can see the updated recipe fields')
+def step_impl(context):
+    data = context.response.get_json()
+    assert data['title'] == 'New recipe title'
+    assert data['marketing_description'] == 'New description'
+
+    recipe = DAO.get(1)
+    assert recipe['title'] == 'New recipe title'
+    assert recipe['marketing_description'] == 'New description'

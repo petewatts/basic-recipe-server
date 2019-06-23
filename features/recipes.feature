@@ -11,3 +11,8 @@ Feature: Recipes
     Then I can see a list of recipes
     And the list is split into paginated results with 10 recipes per page
     And each recipe has to contain only the fields ID, title and description
+
+  Scenario: As an API client I want to update one or more recipe's fields
+    Given I am an API client
+    When I update one or more recipes fields
+    Then I can see the updated recipe fields

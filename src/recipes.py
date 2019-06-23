@@ -61,3 +61,8 @@ class RecipeDAO(object):
 
     def get(self, id):
         return self.recipes.get(id)
+
+    def update(self, id, data):
+        recipe = self.get(id)
+        recipe.update(data)
+        return recipe

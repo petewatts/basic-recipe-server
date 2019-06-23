@@ -10,8 +10,9 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 api = Api(app, version="1.0", title="Recipe API", description="Gousto Recipe API")
 
 # API layout:
-#   GET /recipes/<id>       - Retrieve recipe
 #   GET /by-cuisine/<type>  - List of recipes by cuisine
+#   GET /recipes/<id>       - Retrieve recipe
+#   PUT /recipes/<id>       - Update recipe details
 
 
 recipe_ns = api.namespace("recipes", description="Recipe operations")
@@ -64,6 +65,13 @@ class Recipe(Resource):
     def get(self, id):
         """Fetch a given resource"""
         return DAO.get(id)
+
+    @recipe_ns.expect(recipe)
+    @recipe_ns.marshal_with(recipe)
+    def put(self, id):
+        """Update a recipe by ID"""
+        print(id, api.payload)
+        return DAO.update(id, api.payload)
 
 
 @api.route('/by-cuisine/<cuisine>')
